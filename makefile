@@ -1,16 +1,24 @@
 CC=gcc
+Sources := src/main.c
 
-all: gbh
+objs := $(patsubst src/%.c,obj/%.o,$(Sources))
+
+all: obj/ depfile.mk gbh
+
+.PHONY: depfile.mk
+depfile.mk:
+	@$(CC) -MM $(Sources) | sed 's/\(.*\)/obj\/\1/' > $@
+-include depfile.mk
 
 clean:
 	rm -rf obj/
-	rm -f gbh
+	rm -f gbh depfile.mk
 
-gbh: obj/main.o
+gbh: $(objs)
 	$(CC) $^ -o $@
 
-obj/main.o: src/main.c obj/
-	$(CC) --pedantic --std=c99 -c $< -o $@
+obj/%.o: src/%.c
+	$(CC) -ggdb -pedantic -Wall -Wextra --std=c99 -c $< -o $@
 
 obj/:
 	mkdir $@
