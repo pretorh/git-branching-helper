@@ -6,6 +6,8 @@
 
 const char *DEV_BRANCH;
 
+void mergeIntoAndPush(const char *from, const char *into, const char *type);
+
 void buildBranchName(char *into, const char *type, const char *name);
 void buildVersionBumpMessage(char *into, const char *version);
 

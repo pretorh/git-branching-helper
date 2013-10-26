@@ -22,12 +22,8 @@ void mergeReleaseBranch(const char *version) {
     
     printf("Merge branch %s for release version %s\n", releaseName, version);
     
-    checkoutBranch("master");
-    mergeBranch(releaseName, "release", "master");
+    mergeIntoAndPush(releaseName, "master", "release");
+    mergeIntoAndPush(releaseName, DEV_BRANCH, "release");
     tag(version);
-    pushToOrigin("master");
-    checkoutBranch(DEV_BRANCH);
-    mergeBranch(releaseName, "release", DEV_BRANCH);
-    pushToOrigin(DEV_BRANCH);
     deleteBranch(releaseName);
 }

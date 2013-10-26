@@ -17,8 +17,6 @@ void mergeFeatureBranch(const char *name) {
     
     printf("Merge branch %s for feature %s\n", featName, name);
     
-    checkoutBranch(DEV_BRANCH);
-    mergeBranch(featName, "feature", DEV_BRANCH);
-    pushToOrigin(DEV_BRANCH);
+    mergeIntoAndPush(featName, DEV_BRANCH, "feature");
     deleteBranch(featName);
 }

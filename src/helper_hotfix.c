@@ -21,22 +21,13 @@ void mergeHotfixBranch(const char *version, const char *releaseVersion) {
     
     printf("Merge branch %s for hotfix version %s\n", hotfixName, version);
     
-    checkoutBranch("master");
-    mergeBranch(hotfixName, "hotfix", "master");
-    tag(version);
-    pushToOrigin("master");
-    
+    mergeIntoAndPush(hotfixName, "master", "hotfix");
+    mergeIntoAndPush(hotfixName, DEV_BRANCH, "hotfix");
     if (releaseVersion) {
         char releaseName[1000];
         buildBranchName(releaseName, "release", releaseVersion);
-        
-        checkoutBranch(releaseName);
-        mergeBranch(hotfixName, "hotfix", releaseName);
-        pushToOrigin(releaseName);
+        mergeIntoAndPush(hotfixName, releaseName, "hotfix");
     }
-    
-    checkoutBranch(DEV_BRANCH);
-    mergeBranch(hotfixName, "hotfix", DEV_BRANCH);
-    pushToOrigin(DEV_BRANCH);
+    tag(version);
     deleteBranch(hotfixName);
 }
