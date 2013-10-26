@@ -1,5 +1,6 @@
 CC=gcc
-Sources := src/main.c
+Sources :=  src/main.c \
+			src/git.c
 
 objs := $(patsubst src/%.c,obj/%.o,$(Sources))
 

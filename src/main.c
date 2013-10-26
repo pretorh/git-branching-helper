@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "git.h"
 
 const char *DEV_BRANCH = "dev";
 
@@ -16,6 +17,14 @@ void notYetImplemented() {
     exit(2);
 }
 
+void buildBranchName(char *into, const char *type, const char *name) {
+    sprintf(into, "%s-%s", type, name);
+}
+
+void buildVersionBumpMessage(char *into, const char *version) {
+    sprintf(into, "version bump %s", version);
+}
+
 int main(int argc, const char **argv) {
     validateArgCount(argc, 1, "need at least the command name");
     
@@ -23,19 +32,24 @@ int main(int argc, const char **argv) {
         validateArgCount(argc, 2, "cf 'feature branch name'");
         printf("Create feature branch '%s'\n", argv[2]);
         
-        printf("git checkout -b %s %s\n", argv[2], DEV_BRANCH);
-        printf("git push origin %s\n", argv[2]);
+        char featName[1000];
+        buildBranchName(featName, "feat", argv[2]);
+        
+        createBranchAndSwitch(featName, DEV_BRANCH);
+        pushToOrigin(featName);
+        
         notYetImplemented();
     } else if (0 == strcmp("mf", argv[1])) {
         validateArgCount(argc, 2, "mf 'feature branch name'");
         printf("Merge feature branch '%s'\n", argv[2]);
         
-        printf("git checkout %s\n", DEV_BRANCH);
-        printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", argv[2], "feature", argv[2], DEV_BRANCH);
-        printf("git push origin %s\n", DEV_BRANCH);
+        char featName[1000];
+        buildBranchName(featName, "feat", argv[2]);
         
-        printf("git branch -d %s\n", argv[2]);
-        printf("git push origin --delete %s\n", argv[2]);
+        checkoutBranch(DEV_BRANCH);
+        mergeBranch(featName, "feature", DEV_BRANCH);
+        pushToOrigin(DEV_BRANCH);
+        deleteBranch(featName);
         
         notYetImplemented();
     } else if (0 == strcmp("cr", argv[1])) {
@@ -43,13 +57,15 @@ int main(int argc, const char **argv) {
         printf("Create release branch for version '%s'\n", argv[2]);
         
         char releaseName[1000];
-        strcpy(releaseName, "release-");
-        strcpy(releaseName + 8, argv[2]);
+        buildBranchName(releaseName, "release", argv[2]);
         
-        printf("git checkout -b %s %s\n", releaseName, DEV_BRANCH);
+        char message[100];
+        buildVersionBumpMessage(message, argv[2]);
+        
+        createBranchAndSwitch(releaseName, DEV_BRANCH);
         printf("./%s \"%s\"\n", argv[3], argv[2]);
-        printf("git commit -a -m \"version bump %s\"\n", argv[2]);
-        printf("git push origin %s\n", releaseName);
+        commit(message);
+        pushToOrigin(releaseName);
         
         notYetImplemented();
     } else if (0 == strcmp("mr", argv[1])) {
@@ -57,20 +73,16 @@ int main(int argc, const char **argv) {
         printf("Merge release branch for version '%s'\n", argv[2]);
         
         char releaseName[1000];
-        strcpy(releaseName, "release-");
-        strcpy(releaseName + 8, argv[2]);
+        buildBranchName(releaseName, "release", argv[2]);
         
-        printf("git checkout %s\n", "master");
-        printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", releaseName, "release", argv[2], "master");
-        printf("git tag -a %s -m \"%s\"\n", argv[2], releaseName);
-        printf("git push origin %s\n", "master");
-        
-        printf("git checkout %s\n", DEV_BRANCH);
-        printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", releaseName, "release", argv[2], DEV_BRANCH);
-        printf("git push origin %s\n", DEV_BRANCH);
-        
-        printf("git branch -d %s\n", releaseName);
-        printf("git push origin --delete %s\n", releaseName);
+        checkoutBranch("master");
+        mergeBranch(releaseName, "release", "master");
+        tag(argv[2]);
+        pushToOrigin("master");
+        checkoutBranch(DEV_BRANCH);
+        mergeBranch(releaseName, "release", DEV_BRANCH);
+        pushToOrigin(DEV_BRANCH);
+        deleteBranch(releaseName);
         
         notYetImplemented();
     } else if (0 == strcmp("ch", argv[1])) {
@@ -78,13 +90,14 @@ int main(int argc, const char **argv) {
         printf("Create hot fix for '%s'\n", argv[2]);
         
         char hotfixName[1000];
-        strcpy(hotfixName, "hotfix-");
-        strcpy(hotfixName + 7, argv[2]);
+        buildBranchName(hotfixName, "hotfix", argv[2]);
+        char message[100];
+        buildVersionBumpMessage(message, argv[2]);
         
-        printf("git checkout -b %s %s\n", hotfixName, "master");
+        createBranchAndSwitch(hotfixName, "master");
         printf("./%s \"%s\"\n", argv[3], argv[2]);
-        printf("git commit -a -m \"version bump %s\"\n", argv[2]);
-        printf("git push origin %s\n", hotfixName);
+        commit(message);
+        pushToOrigin(hotfixName);
         
         notYetImplemented();
     } else if (0 == strcmp("mh", argv[1])) {
@@ -92,29 +105,26 @@ int main(int argc, const char **argv) {
         printf("Merge hotfix branch for version '%s'\n", argv[2]);
         
         char hotfixName[1000];
-        strcpy(hotfixName, "hotfix-");
-        strcpy(hotfixName + 7, argv[2]);
+        buildBranchName(hotfixName, "hotfix", argv[2]);
         
-        printf("git checkout %s\n", "master");
-        printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", hotfixName, "hotfix", argv[2], "master");
-        printf("git tag -a %s -m \"%s\"\n", argv[2], hotfixName);
-        printf("git push origin %s\n", "master");
+        checkoutBranch("master");
+        mergeBranch(hotfixName, "hotfix", "master");
+        tag(argv[2]);
+        pushToOrigin("master");
         
         if (argc == 4) {
             char releaseName[1000];
-            strcpy(releaseName, "release-");
-            strcpy(releaseName + 8, argv[3]);
-            printf("git checkout %s\n", releaseName);
-            printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", hotfixName, "hotfix", argv[2], releaseName);
-            printf("git push origin %s\n", releaseName);
+            buildBranchName(releaseName, "release", argv[3]);
+            
+            checkoutBranch(releaseName);
+            mergeBranch(hotfixName, "hotfix", releaseName);
+            pushToOrigin(releaseName);
         }
         
-        printf("git checkout %s\n", DEV_BRANCH);
-        printf("git merge --no-ff %s -m \"Merge %s branch '%s' into '%s'\"\n", hotfixName, "hotfix", argv[2], DEV_BRANCH);
-        printf("git push origin %s\n", DEV_BRANCH);
-        
-        printf("git branch -d %s\n", hotfixName);
-        printf("git push origin --delete %s\n", hotfixName);
+        checkoutBranch(DEV_BRANCH);
+        mergeBranch(hotfixName, "hotfix", DEV_BRANCH);
+        pushToOrigin(DEV_BRANCH);
+        deleteBranch(hotfixName);
         
         notYetImplemented();
     } else {
