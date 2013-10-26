@@ -28,4 +28,5 @@ void commit(const char *message) {
 
 void tag(const char *tagName) {
     printf("git tag -a %s -m \"%s\"\n", tagName, tagName);
+    printf("git push origin %s\n", tagName);
 }
