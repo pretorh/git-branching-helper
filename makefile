@@ -1,6 +1,10 @@
 CC=gcc
 Sources :=  src/main.c \
-			src/git.c
+			src/git.c \
+			src/helper_shared.c \
+			src/helper_feat.c \
+			src/helper_release.c \
+			src/helper_hotfix.c
 
 objs := $(patsubst src/%.c,obj/%.o,$(Sources))
 
